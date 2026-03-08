@@ -20,20 +20,27 @@ pip install -r requirements.txt
 
 ## Quick Start
 
+CLI (recommended): run from terminal and supply an image URL and text (or you'll be prompted):
+
+```bash
+python clip_run.py --image-url "https://example.com/img.jpg" --text "A short paragraph describing the image"
+```
+
+Python (import the class):
+
 ```python
-from clip_similarity_checker import CLIPSimilarityChecker
+from clip_run import CLIPSimilarityChecker
 
-# Initialize checker
-checker = CLIPSimilarityChecker(threshold=0.25)
+# Initialize checker (defaults: similar=0.19, exact=0.25)
+checker = CLIPSimilarityChecker()
 
-# Check if image matches text
 text = "Oscar winner holding an award at the ceremony"
 image_url = "https://example.com/oscar-photo.jpg"
 
 result = checker.check_match(text, image_url)
 
 print(f"Similarity: {result['similarity_score']}")
-print(f"Match: {result['is_match']}")
+print(f"Relation: {result.get('relation')} (code: {result.get('relation_code')})")
 ```
 
 ## How It Works
@@ -43,11 +50,15 @@ print(f"Match: {result['is_match']}")
 3. **Compare**: Calculates cosine similarity between the embeddings
 4. **Decide**: Compares similarity score against threshold to determine match/mismatch
 
-## Understanding Similarity Scores
+## Understanding Similarity Scores & Relations
 
-- **0.40 - 1.00**: Strong match (content clearly relates)
-- **0.25 - 0.40**: Moderate match (some relation)
-- **0.00 - 0.25**: Weak/no match (potential fake news)
+This project maps raw cosine similarity into three relation labels using configurable thresholds (defaults in code: `similar_threshold=0.19`, `exact_threshold=0.25`):
+
+- `not at all related` (code 1): similarity < 0.19
+- `similar context` (code 2): 0.19 <= similarity < 0.25
+- `exact related` (code 3): similarity >= 0.25
+
+You can change these thresholds when creating `CLIPSimilarityChecker()` or by passing CLI flags `--similar-threshold` and `--exact-threshold`.
 
 ## Threshold Configuration
 
@@ -125,6 +136,7 @@ results = checker.batch_check(articles)
 - Python 3.8+
 - PyTorch 2.0+
 - Transformers 4.30+
+- Accelerate (optional, improves transformers performance)
 - PIL (Pillow)
 - Requests
 
